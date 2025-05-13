@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('categorie_id')->nullable();
             $table->foreign('categorie_id')->references('id')->on('categories')->onDelete('set null');
-            $table->string('libelle');
+            $table->string('libelle')->nullable();
             $table->decimal('montant', 10, 2);
             $table->date('date');
             $table->unsignedBigInteger('moyen_paiement_id')->nullable();

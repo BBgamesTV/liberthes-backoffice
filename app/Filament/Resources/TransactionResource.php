@@ -12,6 +12,10 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Models\Categorie;
+use Filament\Forms\Components\{Select, TextInput, DatePicker, Textarea};
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\BadgeColumn;
 
 class TransactionResource extends Resource
 {
@@ -24,20 +28,27 @@ class TransactionResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Select::make('type')
-                ->options([
-                    'revenu' => 'Revenu',
-                    'dépense' => 'Dépense',
-                ])
-                ->required()
-                ->label('Type'),
-
             Forms\Components\Select::make('categorie_id')
                 ->label('Catégorie')
                 ->relationship('categorie', 'nom')
-                ->searchable()
-                ->preload()
-                ->required(),
+                ->required()
+                ->reactive() // ← pour déclencher un changement dynamique
+                ->afterStateUpdated(function ($state, callable $set) {
+                    $categorie = Categorie::find($state);
+                    if ($categorie) {
+                        $set('libelle', $categorie->nom);
+                        $set('type', $categorie->type);
+                    }
+                }),
+
+            TextInput::make('libelle')
+                ->hidden()
+                ->dehydrated(),
+
+            // TextInput::make('type')
+            //     ->label('Type')
+            //     ->disabled()
+            //     ->dehydrated(),
 
             Forms\Components\TextInput::make('montant')
                 ->numeric()
@@ -46,6 +57,7 @@ class TransactionResource extends Resource
 
             Forms\Components\DatePicker::make('date')
                 ->required()
+                ->default(now())
                 ->label('Date'),
 
             Forms\Components\Select::make('moyen_paiement_id')
@@ -62,45 +74,46 @@ class TransactionResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table->columns([
-            Tables\Columns\TextColumn::make('date')
-                ->sortable()
-                ->label('Date'),
+{
+    return $table
+        ->columns([
+            TextColumn::make('libelle')
+                ->label('Libellé')
+                ->searchable()
+                ->sortable(),
 
-            Tables\Columns\BadgeColumn::make('type')
+            TextColumn::make('montant')
+                ->label('Montant (€)')
+                ->sortable()
+                ->money('EUR'),
+
+            TextColumn::make('categorie.nom')
+                ->label('Catégorie')
+                ->sortable(),
+
+            BadgeColumn::make('categorie.type')
+                ->label('Type')
                 ->colors([
                     'success' => 'revenu',
                     'danger' => 'dépense',
                 ])
-                ->label('Type'),
-
-            Tables\Columns\TextColumn::make('categorie.nom')
-                ->label('Catégorie')
-                ->sortable()
-                ->searchable(),
-
-            Tables\Columns\TextColumn::make('montant')
-                ->money('EUR')
-                ->label('Montant'),
-
-            Tables\Columns\TextColumn::make('moyenPaiement.nom')
-                ->label('Paiement')
-                ->sortable()
-                ->searchable(),
-
-            Tables\Columns\TextColumn::make('note')
-                ->limit(30)
-                ->label('Note'),
-        ])->filters([
-            Tables\Filters\SelectFilter::make('type')
-                ->options([
-                    'revenu' => 'Revenu',
-                    'dépense' => 'Dépense',
+                ->icons([
+                    'heroicon-o-arrow-trending-up' => 'revenu',
+                    'heroicon-o-arrow-trending-down' => 'dépense',
                 ])
-                ->label('Type'),
-        ])->defaultSort('date', 'desc');
-    }
+                ->sortable(),
+
+            TextColumn::make('moyenPaiement.nom')
+                ->label('Paiement')
+                ->sortable(),
+
+            TextColumn::make('date')
+                ->label('Date')
+                ->date()
+                ->sortable(),
+        ])
+        ->defaultSort('date', 'desc');
+}
 
     public static function getPages(): array
     {
