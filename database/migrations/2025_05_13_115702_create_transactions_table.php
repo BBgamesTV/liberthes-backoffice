@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['revenu', 'dépense']);
+            $table->unsignedBigInteger('categorie_id')->nullable();
+            $table->foreign('categorie_id')->references('id')->on('categories')->onDelete('set null');
             $table->string('libelle');
             $table->decimal('montant', 10, 2);
             $table->date('date');
-            $table->string('moyen_paiement')->nullable(); // ex: CB, espèce, Lydia
+            $table->unsignedBigInteger('moyen_paiement_id')->nullable();
+            $table->foreign('moyen_paiement_id')->references('id')->on('moyen_paiements')->onDelete('set null');
             $table->text('note')->nullable();
             $table->timestamps();
         });

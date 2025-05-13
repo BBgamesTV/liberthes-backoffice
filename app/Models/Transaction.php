@@ -13,5 +13,14 @@ class Transaction extends Model
         'date',
         'moyen_paiement',
         'note',
-    ];  
+    ];
+    public function categorie()
+    {
+        return $this->belongsTo(Categorie::class);
+    }
+
+    public function moyenPaiement()
+    {
+        return $this->belongsTo(MoyenPaiement::class);
+    }
 }

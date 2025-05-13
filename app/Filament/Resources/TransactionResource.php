@@ -32,9 +32,12 @@ class TransactionResource extends Resource
                 ->required()
                 ->label('Type'),
 
-            Forms\Components\TextInput::make('libelle')
-                ->required()
-                ->label('Libellé'),
+            Forms\Components\Select::make('categorie_id')
+                ->label('Catégorie')
+                ->relationship('categorie', 'nom')
+                ->searchable()
+                ->preload()
+                ->required(),
 
             Forms\Components\TextInput::make('montant')
                 ->numeric()
@@ -45,8 +48,12 @@ class TransactionResource extends Resource
                 ->required()
                 ->label('Date'),
 
-            Forms\Components\TextInput::make('moyen_paiement')
-                ->label('Moyen de paiement'),
+            Forms\Components\Select::make('moyen_paiement_id')
+                ->label('Moyen de paiement')
+                ->relationship('moyenPaiement', 'nom')
+                ->searchable()
+                ->preload()
+                ->required(),
 
             Forms\Components\Textarea::make('note')
                 ->label('Note')
@@ -68,16 +75,19 @@ class TransactionResource extends Resource
                 ])
                 ->label('Type'),
 
-            Tables\Columns\TextColumn::make('libelle')
-                ->searchable()
-                ->label('Libellé'),
+            Tables\Columns\TextColumn::make('categorie.nom')
+                ->label('Catégorie')
+                ->sortable()
+                ->searchable(),
 
             Tables\Columns\TextColumn::make('montant')
                 ->money('EUR')
                 ->label('Montant'),
 
-            Tables\Columns\TextColumn::make('moyen_paiement')
-                ->label('Paiement'),
+            Tables\Columns\TextColumn::make('moyenPaiement.nom')
+                ->label('Paiement')
+                ->sortable()
+                ->searchable(),
 
             Tables\Columns\TextColumn::make('note')
                 ->limit(30)
@@ -101,5 +111,3 @@ class TransactionResource extends Resource
         ];
     }
 }
-
-
