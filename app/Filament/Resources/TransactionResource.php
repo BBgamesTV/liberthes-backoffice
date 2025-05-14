@@ -77,10 +77,10 @@ class TransactionResource extends Resource
 {
     return $table
         ->columns([
-            TextColumn::make('libelle')
-                ->label('Libellé')
-                ->searchable()
-                ->sortable(),
+            // TextColumn::make('libelle')
+            //     ->label('Libellé')
+            //     ->searchable()
+            //     ->sortable(),
 
             TextColumn::make('montant')
                 ->label('Montant (€)')
@@ -91,7 +91,7 @@ class TransactionResource extends Resource
                 ->label('Catégorie')
                 ->sortable(),
 
-            BadgeColumn::make('categorie.type')
+            TextColumn::make('categorie.type')
                 ->label('Type')
                 ->colors([
                     'success' => 'revenu',
@@ -101,7 +101,8 @@ class TransactionResource extends Resource
                     'heroicon-o-arrow-trending-up' => 'revenu',
                     'heroicon-o-arrow-trending-down' => 'dépense',
                 ])
-                ->sortable(),
+                ->sortable()
+                ->badge(),
 
             TextColumn::make('moyenPaiement.nom')
                 ->label('Paiement')

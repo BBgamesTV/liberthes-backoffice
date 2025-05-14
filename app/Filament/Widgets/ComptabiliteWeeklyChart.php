@@ -3,43 +3,58 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Transaction;
-use Carbon\Carbon;
-use Filament\Widgets\Widget;
-use Illuminate\Contracts\View\View;
+use Filament\Widgets\ChartWidget;
 
-class ComptabiliteWeeklyChart extends Widget
+class ComptabiliteWeeklyChart extends ChartWidget
 {
-    protected static ?string $heading = 'Revenus & Dépenses de la semaine';
-    protected int|string|array $columnSpan = 'full';
+    protected static ?string $heading = 'Revenus vs Dépenses';
+    protected static string $color = 'primary';
 
-    public function render(): View
+    protected function getData(): array
     {
-        // On commence par récupérer les données
-        $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY);
-        $labels = [];
-        $revenus = [];
-        $depenses = [];
+        $data = Transaction::selectRaw('MONTH(date) as month, categorie_id, SUM(montant) as total')
+            ->join('categories', 'transactions.categorie_id', '=', 'categories.id')
+            ->groupBy('month', 'categories.type')
+            ->orderBy('month')
+            ->get()
+            ->groupBy('categorie.type');
 
-        foreach (range(0, 6) as $i) {
-            $day = $startOfWeek->copy()->addDays($i);
-            $labels[] = $day->translatedFormat('l'); // Jours de la semaine
+        $revenus = $data['revenu'] ?? collect();
+        $depenses = $data['dépense'] ?? collect();
 
-            // Récupérer les revenus pour ce jour
-            $revenus[] = Transaction::whereHas('categorie', fn ($q) => $q->where('type', 'revenu'))
-                ->whereDate('date', $day)
-                ->sum('montant');
+        $labels = collect(range(1, 12))->map(function ($m) {
+            return now()->startOfYear()->addMonths($m - 1)->format('M');
+        });
 
-            // Récupérer les dépenses pour ce jour
-            $depenses[] = Transaction::whereHas('categorie', fn ($q) => $q->where('type', 'dépense'))
-                ->whereDate('date', $day)
-                ->sum('montant');
-        }
+        $seriesRevenus = $labels->map(function ($_, $index) use ($revenus) {
+            return $revenus->firstWhere('month', $index + 1)?->total ?? 0;
+        });
 
-        // Retourner la vue avec les données pour le graphique
-        return view('filament.widgets.comptabilite-weekly-chart', [
+        $seriesDepenses = $labels->map(function ($_, $index) use ($depenses) {
+            return $depenses->firstWhere('month', $index + 1)?->total ?? 0;
+        });
+
+        return [
+            'datasets' => [
+                [
+                    'label' => 'Revenus',
+                    'data' => $seriesRevenus,
+                    'borderColor' => '#10B981',
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.2)',
+                ],
+                [
+                    'label' => 'Dépenses',
+                    'data' => $seriesDepenses,
+                    'borderColor' => '#EF4444',
+                    'backgroundColor' => 'rgba(239, 68, 68, 0.2)',
+                ],
+            ],
             'labels' => $labels,
-            'revenus' => $revenus,
-            'depenses' => $depenses,
-        ]);
+        ];
+    }
+
+    protected function getType(): string
+    {
+        return 'line'; // ou 'bar' si tu préfères un graphique à barres
     }
 }
