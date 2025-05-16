@@ -72,7 +72,7 @@ Ce projet a pour but de faciliter le suivi des **transactions**, des **revenus**
 
 1. **Cloner le dépôt :**
    ```bash
-    git clone https://github.com/ton-utilisateur/liberthes-backoffice.git
+    git clone https://github.com/BBgamesTV/liberthes-backoffice.git
     cd liberthes-backoffice
     composer install
     npm install && npm run build
